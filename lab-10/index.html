@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset=utf-8 />
+  <title>Lab 10 NMP Jefferson County Foreclosures</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  crossorigin=""/>
+  <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+  <style>
+ body {
+      margin: 0;
+      padding: 0;
+      background: #222;
+      font-family: Lato, sans-serif;
+      font-size: 100%;
+      color: #ddd;
+    }
+
+    header {
+      width: 80%;
+      margin: 10px auto 10px auto;
+    }
+
+    h1 {
+      display: inline-block;
+      margin-right: 20px;
+      color: #001323;
+    }
+
+    h2 {
+      display: inline-block;
+      color: #001323;
+    }
+
+    a {
+      color: #004A8B;
+    }
+
+    a:hover {
+      color: rgb(67, 69, 71);
+      text-decoration: none;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      background: rgba(63, 63, 63, 0.9);
+    }
+
+    footer {
+      padding: 6px 10%;
+      width: 80%;
+    }
+
+    p {
+      font-size: 1em;
+      color: #001323;
+    }
+
+    .legend {
+      padding: 6px 8px;
+      font-size: 1em;
+      border: 2px solid rgba(244, 244, 244, 0.2);
+      background: rgba(100, 100, 100, 0.9);
+      color: rgba(244, 244, 244, 0.8);
+      border-radius: 5px;
+    }
+
+    .legend h3 {
+      font-size: 1.1em;
+      font-weight: bolder;
+      color: #ddd;
+      margin: 0 0 10px 0;
+    }
+
+    .legend span {
+      width: 20px;
+      height: 20px;
+      float: left;
+      margin: 0 10px 4px 0;
+    }
+
+    .legend label {
+      font-size: 1.1em;
+    }
+
+    .legend label:after {
+      content: '';
+      display: block;
+      clear: both;
+    }
+
+    .leaflet-bar a {
+      background: rgba(100, 100, 100, 0.9);
+      color: rgba(244, 244, 244, 0.8);
+    }
+
+    #info-button {
+    padding: 8px 5px;
+    font-size: 0.9em;
+    font-weight: bolder;
+    border: 2px solid rgba(244, 244, 244, 0.2);
+    background: rgba(100, 100, 100, 0.9);
+    color: rgba(244, 244, 244, 0.8);
+    border-radius: 5px;
+    position: fixed;
+    top: 11px;
+    right: 52px;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+#footer {
+    width: 100%;
+    background: rgba(244, 244, 244, 0.8);
+    color: rgba(20, 20, 20, 0.8);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    height: 0px;
+    padding: 0px;
+    z-index: 9000;
+    position: absolute;
+    bottom: -10px;
+    overflow: scroll;
+}
+
+#footer div {
+    padding: 10px;
+}
+
+#footer h1 {
+    font-size: 1.3em;
+    margin: 0 0 5px 0;
+}
+
+.footer-img {
+    float: right;
+    height: 10vh;
+    margin: 10px;
+}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Foreclosures in Jefferson County, KY</h1>
+    <h2>Foreclosures per 1000 people</h2>
+  </header>
+
+  <div id='map'></div>
+  <button id="info-button" onclick="myInfo()">Information</button>
+  <div id='footer'>
+      <div><img src="https://uky-gis.github.io/graphics/logo-color-400px.png" class="footer-img">
+          <h1>Population adjusted foreclosures across Jefferson County</h1>
+          Data obtained through the Jefferson County Cirtcuit (<a href="https://www.jeffcomm.org/">court</a>).
+         Map created by <a href="https://github.com/mmccanless">mmccanless</a>, Spring 2022.
+      </div>
+  </div>
+
+  <footer>
+  </footer>
+  
+  <!-- <script src="../lab-10/data/jeff_foreclosures_1000.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+  <script src='https://unpkg.com/simple-statistics@7.6.0/dist/simple-statistics.min.js'>
+  </script>
+
+  <script>
+  var options = {
+      center: [38.24, -85.74],
+      zoom: 1,
+      zoomSnap: .1,
+      zoomControl: false
+  }
+  var map = L.map('map', options);
+
+  map.addControl(L.control.zoom({
+      position: 'topright'
+  }));
+
+  // var foreclosuresLayer = 
+  var countyLayer = $.getJSON("data/jeff_foreclosures_v2.geojson", function (data) {
+
+  var dataLayer = L.geoJson(data, {
+  style: function (feature) {
+      return {
+          color: '#444',
+          weight: 1,
+          fillOpacity: 1,
+          fillColor: '#1f78b4'
+          };
+      }
+    })
+    dataLayer.addTo(map);
+    drawMap(dataLayer);
+  });
+
+  map.fitBounds([
+      [38.2042, -86.1328],
+      [38.2091, -85.2594]
+    ])
+
+  function drawMap(dataLayer) {
+    var breaks = getClassBreaks(dataLayer);
+    dataLayer.eachLayer(function(layer) {
+      var props = layer.feature.properties;
+      layer.setStyle({
+        fillColor: getColor(layer.feature.properties["foreclosures_per_1000"], breaks)
+      });
+    var toolTip = 
+    `<b>Census Tract: ${layer.feature.properties["NAME"]}</b><br> Foreclosures per 1000 people: ${layer.feature.properties["foreclosures_per_1000"]}`;
+    if (L.Browser.mobile) {
+          layer.bindPopup(toolTip);
+        } else {
+          layer.bindTooltip(toolTip, {
+            sticky: true
+          });
+        };
+      });
+      drawLegend(breaks);
+    }
+  
+  function getClassBreaks(dataLayer) {
+    var values = [];
+    dataLayer.eachLayer(function(layer) {
+      var value = parseInt(layer.feature.properties["foreclosures_per_1000"]);
+      if (layer.feature.properties["foreclosures_per_1000"] != null)
+      values.push(value);  
+    });
+      var clusters = ss.ckmeans(values, 5);  
+      var breaks = clusters.map(function(cluster){
+        return [cluster[0],cluster.pop()];   
+      });
+      return breaks;
+    }
+  
+  function getColor(d, breaks) {
+        if(d <= breaks[0][1]) {
+              return '#fee5d9';
+          } else if(d <= breaks[1][1]) {
+              return '#fcae91';
+          } else if(d <= breaks[2][1]) {
+              return '#fb6a4a';
+          } else if(d <= breaks[3][1]) {
+              return '#de2d26'
+          } else if(d <= breaks[4][1]) {
+              return '#a50f15'
+          }
+        } // end getColor
+
+  function drawLegend(breaks) {
+        var legend = L.control({
+          position: 'bottomright'
+        });
+        legend.onAdd = function () {
+          var div = L.DomUtil.create('div', 'legend');
+        div.innerHTML = `<h3>Foreclosures per 1000 people</h3>`;
+          for (var i = 0; i < breaks.length; i++) {
+        var color = getColor(breaks[i][0], breaks);
+         div.innerHTML +=
+        `<span style="background:${color}"></span>
+        <label>${breaks[i][0]} &ndash;
+        ${breaks[i][1]}</label>`;
+      }
+        return div;
+        };
+        legend.addTo(map);
+    }
+
+  var clicked = false // start with false condition
+    function myInfo() {
+
+      // create button that changes color on click
+      // create a footer overlay that displays 33% of the current viewport height
+      var x = document.getElementById('footer');
+      var y = document.getElementById('info-button');
+      if (clicked) {
+          y.style.background = 'rgba(100, 100, 100, 0.9)'; // gray button
+          x.style.height = '0px'; // no footer height 
+      } else {
+          y.style.background = 'rgba(146, 239, 146, 0.8)' // green button
+          x.style.height = '33vh';  // footer 33% of viewport height
+      }
+      clicked = !clicked
+    }
+  </script>
+
+</body>
+
+</html>
