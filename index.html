@@ -235,7 +235,26 @@
       layer.setStyle({
         fillColor: getColor(layer.feature.properties["foreclosures_per_1000"], breaks)
       });
-    var toolTip = 
+  dataLayer.eachLayer(function(layer) {
+  layer.on('mouseover', function (e) {
+    this.setStyle({
+      color: "yellow",
+      weight: 4,
+      opacity: .9,
+      dashArray: "5, 5"
+  })
+  })
+	});
+  dataLayer.eachLayer(function(layer) {
+  layer.on('mouseout', function (e) {
+    this.setStyle({
+      color: '#444',
+      weight: 1,
+      fillOpacity: 1
+    })
+      })
+	});
+      var toolTip = 
     `<b>Census Tract: ${layer.feature.properties["NAME"]}</b><br> Foreclosures per 1000 people: ${layer.feature.properties["foreclosures_per_1000"]}`;
     if (L.Browser.mobile) {
           layer.bindPopup(toolTip);
@@ -311,6 +330,25 @@
       }
       clicked = !clicked
     }
+
+    dataLayer.on('mouseover', function (e) {
+ 		this.setStyle({
+		color: "#005DAA",
+		weight: 8,
+		opacity: .4,
+		dashArray: "5, 5"
+		})
+	});
+
+	// dataLayer.on('mouseout', function (e) {
+	// 	this.setStyle({
+	// 	color: "#005DAA",
+	// 	weight: 4,
+	// 	opacity: .6,
+	// 	dashArray: "5, 5"
+	// 	})
+	// });
+
   </script>
 
 </body>
