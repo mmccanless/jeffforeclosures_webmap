@@ -178,6 +178,7 @@
   var options = {
       center: [38.24, -85.74],
       zoom: 1,
+      minZoom: 7.5,
       zoomSnap: .1,
       zoomControl: false
   }
@@ -186,7 +187,7 @@
   map.addControl(L.control.zoom({
       position: 'topright'
   }));
-
+  
   // var foreclosuresLayer = 
   var countyLayer = $.getJSON("lab-10/data/jeff_foreclosures_v2.geojson", function (data) {
 
@@ -204,9 +205,27 @@
     drawMap(dataLayer);
   });
 
+  $.when(countyLayer).done(function () {
+  // load, filter, and style the state outline 
+  $.getJSON("lab-10/data/kentucky_counties_min_jeff.geojson", function (data) {
+      var stateLayer = L.geoJson(data, {
+        style: function (feature) {
+          return {
+            color: '#808080', // White
+            weight: 1,
+            fillOpacity: 0,
+            interactive: false
+          };
+        },
+      });
+      stateLayer.addTo(map)
+
+    });
+  });
+
   map.fitBounds([
-      [38.2042, -86.1328],
-      [38.2091, -85.2594]
+      [38.2128,-86.2731],
+      [38.2163, -84.9819]
     ])
 
   function drawMap(dataLayer) {
@@ -263,7 +282,7 @@
         });
         legend.onAdd = function () {
           var div = L.DomUtil.create('div', 'legend');
-        div.innerHTML = `<h3>Foreclosures per 1000 people</h3>`;
+        div.innerHTML = `<h3>Lousville, KY <br>Foreclosures per 1000 people</br></h3>`;
           for (var i = 0; i < breaks.length; i++) {
         var color = getColor(breaks[i][0], breaks);
          div.innerHTML +=
