@@ -1,0 +1,7 @@
+{
+  "title": "A map of foreclosures in Louisville, KY",
+  "info": "This map uses data from local courts to map the census tracts with the highest rates of mortgage foreclosure", 
+  "coordinates": [38.2483, -85.7551],
+  "author": "Michael McCanless",
+  "link": "https://mmccanless.github.io/jeffforeclosures_webmap/"
+}
