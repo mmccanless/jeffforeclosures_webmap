@@ -240,7 +240,10 @@
   map.fitBounds([
       [38.2128,-86.2731],
       [38.2163, -84.9819]
-    ])
+    ],
+    {
+      animate: false
+    })
 
   function drawMap(dataLayer) {
     var breaks = getClassBreaks(dataLayer);
